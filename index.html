@@ -4,11 +4,174 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="/style.css" rel="stylesheet" type="text/css">
-    <title> Doc ProjetInfra </title>
+    <title> Documentation ProjetInfra </title>
 </head>
 <body>
-<h1> Documentation Projet Infra </h1>
-<h2> Test de Pull </h2>
-    
+    <div class="container">
+        <header>
+            <h1>Documentation Projet Infra-SI</h1>
+            <nav>
+                <ul>
+                    <li><a href="#explication-du-projet">Explication du projet</a></li>
+                    <li><a href="#maquette-de-notre-architecture">Maquette de notre architecture</a></li>
+                    <li><a href="#details-de-larchitecture">Détails de l’architecture</a></li>
+                    <li><a href="#regles-du-pare-feu">Règles du Pare-feu</a></li>
+                    <li><a href="#fonctionnement-de-la-recuperation">Fonctionnement de la récupération</a></li>
+                    <li><a href="#bilan">Bilan</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <section id="explication-du-projet">
+                <h2>1. Explication du projet</h2>
+                <p>
+                    Pour ce projet, nous devions mettre en place l’architecture informatique d’une petite entreprise. Cette architecture devait comprendre différents éléments :
+                </p>
+                <ul>
+                    <li>Un pare-feu</li>
+                    <li>Deux clients : un sous Linux et un sous Windows</li>
+                    <li>Un serveur Linux pour héberger un site web</li>
+                    <li>Un serveur Linux pour sauvegarder le site web</li>
+                </ul>
+                <p>
+                    En termes de sécurité, le serveur de sauvegarde doit être accessible uniquement via le réseau interne de la société (clients et serveur web). En revanche, le serveur web doit être accessible à tout le monde.
+                </p>
+            </section>
+
+            <section id="maquette-de-notre-architecture">
+                <h2>2. Maquette de notre architecture</h2>
+                <p><img src="/img/Maquette.png"></p>
+            </section>
+
+            <section id="details-de-larchitecture">
+                <h2>3. Détails de l’architecture</h2>
+                <p>
+                    Pour cette architecture, nous avons utilisé <strong>pfSense</strong> pour le pare-feu :
+                </p>
+                <p>Notre pare-feu dispose de trois interfaces :</p>
+                <ul>
+                    <li>
+                        <strong>Interface WAN (Wide Area Network)</strong> :
+                        <ul>
+                            <li>Adresse IP : 192.168.1.25/24</li>
+                            <li>Fonction : Permettre la connexion avec les réseaux externes en filtrant les trafics entrants et sortants.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong>Interface LAN (Local Area Network)</strong> :
+                        <ul>
+                            <li>Adresse IP : 10.0.0.1/24</li>
+                            <li>Fonction : Permettre la communication entre les périphériques du réseau local.</li>
+                            <li>Configuration DHCP : Distribution des adresses IP à partir de 10.0.0.10.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong>Interface DMZ (Demilitarized Zone)</strong> :
+                        <ul>
+                            <li>Adresse IP : 10.0.2.1/24</li>
+                            <li>Fonction : Servir de zone tampon entre Internet et le réseau local. Le serveur web est placé dans cette DMZ pour réduire son exposition directe sur Internet et protéger notre pare-feu en cas d’attaque sur le serveur web.</li>
+                        </ul>
+                    </li>
+                </ul>
+                <p>
+                    Pour le serveur web, nous avons utilisé <strong>Nginx</strong> relié à Git pour faciliter la mise à jour du code de notre documentation. La VM Web se trouve dans la DMZ, configurée avec une IP statique : 10.0.2.2. Notre serveur web est accessible depuis l'extérieur via une redirection de l’IP de l’interface WAN (192.168.1.25).
+                </p>
+                <p>
+                    Pour le serveur de sauvegarde, nous avons utilisé <strong>Restic</strong>. La VM de sauvegarde est dans le réseau interne, configurée en DHCP avec l’IP 10.0.0.11.
+                </p>
+                <p>
+                    Enfin, les deux clients sont dans le réseau local, toujours en DHCP : 10.0.0.10 pour le client Linux et 10.0.0.13 pour le client Windows. Ils ont accès au pare-feu, au site web via le réseau local et au serveur de sauvegarde.
+                </p>
+            </section>
+
+            <section id="regles-du-pare-feu">
+                <h2>4. Règles du Pare-feu</h2>
+                <p>
+                    Pour sécuriser notre architecture, il est crucial de mettre en place des règles pour les flux entrants et sortants sur nos trois interfaces. L'accès au pare-feu se fait principalement grâce aux clients via l’IP 192.168.1.25 (Linux ou Windows).
+                </p>
+                <p>Voici les principales règles mises en place :</p>
+                <ul>
+                    <li>
+                        <strong>Isolation de la DMZ</strong> :
+                        <ul>
+                            <li>Bloquer les flux de la DMZ vers le LAN pour isoler notre serveur web.</li>
+                            <li>Autoriser les requêtes HTTP (port 80) vers l’adresse 10.0.2.2 pour rendre le serveur web accessible depuis le réseau local.</li>
+                            <li>Autoriser le port 22 (SSH) pour les connexions entre la VM de sauvegarde et la VM web.</li>
+                        </ul>
+                    </li>
+                    <img src="/img/Règlesweb.png" alt="Règles du pare-feu pour le serveur web">
+                    <li>
+                        <strong>Règles sur l’interface DMZ</strong> :
+                        <ul>
+                            <li>Bloquer les flux pour isoler le serveur web.</li>
+                            <li>Autoriser les flux entrants en HTTP, permettant la redirection de l’adresse WAN vers notre serveur.</li>
+                            <li>Autoriser le DNS pour résoudre les adresses IP.</li>
+                        </ul>
+                    </li>
+                    <img src="/img/DMZ.png" alt="Règles du pare-feu pour l'interface DMZ">
+                    <li>
+                        <strong>Configuration du Port Forwarding</strong> :
+                        <ul>
+                            <li>Rediriger les requêtes HTTP (port 80) arrivant sur l’adresse WAN (192.168.1.25) vers l’IP fixe 10.0.2.2, correspondant au site web.</li>
+                        </ul>
+                    </li>
+                    <img src="/img/PortForward.png" alt="Configuration du Port Forwarding">
+                </ul>
+                <p>
+                    Ces règles permettent aux utilisateurs externes d’accéder à notre serveur web tout en le sécurisant contre les flux non autorisés autres que HTTP.
+                </p>
+            </section>
+
+            <section id="fonctionnement-de-la-recuperation">
+                <h2>5. Fonctionnement de la récupération</h2>
+                <p>
+                    Pour la sauvegarde et la récupération des données, nous utilisons notre VM de backup configurée en 10.0.0.11, qui sert de dépôt de données grâce à <strong>Restic</strong>. Cette VM de backup permet également de contrôler à distance la VM web via une connexion SSH.
+                </p>
+                <p>Sur notre VM web, nous avons créé deux scripts :</p>
+                <ul>
+                    <li>
+                        <strong>Script de sauvegarde</strong> :
+                        <ul>
+                            <li><strong>Fonction</strong> : Sauvegarder les fichiers importants du serveur web, notamment les fichiers de configuration de Nginx et les fichiers liés à Git (HTML et CSS de la documentation).</li>
+                            <li><strong>Procédure</strong> :
+                                <ul>
+                                    <li>Se connecte en SSH à la VM de backup pour sauvegarder les données souhaitées dans le dossier 'backup'.</li>
+                                    <li>Pour des raisons de sécurité, et pour éviter de laisser le mot de passe SSH en clair, celui-ci est stocké dans un fichier nommé <code>password.txt</code>.</li>
+                                </ul>
+                            </li>
+                            <li><strong>Automatisation</strong> : Ce script est configuré pour s'exécuter automatiquement tous les jours à 2h du matin afin d'assurer des sauvegardes continues.</li>
+                        </ul>
+                    </li>
+                    <img src="/img/Save.png" alt="Script de sauvegarde">
+                    <li>
+                        <strong>Script de restauration</strong> :
+                        <ul>
+                            <li><strong>Fonction</strong> : Restaurer la dernière snapshot sauvegardée.</li>
+                            <li><strong>Procédure</strong> :
+                                <ul>
+                                    <li>Se connecte en SSH à la VM de backup.</li>
+                                    <li>Restaure la dernière snapshot sauvegardée dans le dossier ‘Target’ (ici nommé ‘Testresto’).</li>
+                                    <li>Le dossier de restauration contiendra la configuration Nginx et les fichiers HTML et CSS de la dernière sauvegarde effectuée.</li>
+                                </ul>
+                            </li>
+                            <img src="/img/Restau.png" alt="Script de restauration">
+                        </ul>
+                    </li>
+                </ul>
+                <p>
+                    En cas de panne du serveur web, nous pouvons nous connecter en SSH depuis la VM de backup et exécuter les scripts pour restaurer les différents fichiers. Cela permet de rétablir rapidement les services du serveur web avec les dernières données sauvegardées.
+                </p>
+            </section>
+
+            <section id="bilan">
+                <h2>6. Bilan</h2>
+                <p>
+                    Nous avons pu mettre en place une architecture complète pour une petite entreprise, en sécurisant les accès et en assurant la sauvegarde des données.
+                    Ce projet nous a donc permis de manipuler des notions d'infra, de réseaux et de linux vu tout au long de l'année.
+                </p>
+            </section>
+        </main>
+    </div>
 </body>
 </html>
