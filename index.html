@@ -41,7 +41,7 @@
 
             <section id="maquette-de-notre-architecture">
                 <h2>2. Maquette de notre architecture</h2>
-                <p><img src="/img/Maquette.png"></p>
+                <p><img src="img/Maquette.png"></p>
             </section>
 
             <section id="details-de-larchitecture">
@@ -100,7 +100,7 @@
                             <li>Autoriser le port 22 (SSH) pour les connexions entre la VM de sauvegarde et la VM web.</li>
                         </ul>
                     </li>
-                    <img src="/img/Règlesweb.png" alt="Règles du pare-feu pour le serveur web">
+                    <img src="img/Règlesweb.png" alt="Règles du pare-feu pour le serveur web">
                     <li>
                         <strong>Règles sur l’interface DMZ</strong> :
                         <ul>
@@ -109,14 +109,14 @@
                             <li>Autoriser le DNS pour résoudre les adresses IP.</li>
                         </ul>
                     </li>
-                    <img src="/img/DMZ.png" alt="Règles du pare-feu pour l'interface DMZ">
+                    <img src="img/DMZ.png" alt="Règles du pare-feu pour l'interface DMZ">
                     <li>
                         <strong>Configuration du Port Forwarding</strong> :
                         <ul>
                             <li>Rediriger les requêtes HTTP (port 80) arrivant sur l’adresse WAN (192.168.1.25) vers l’IP fixe 10.0.2.2, correspondant au site web.</li>
                         </ul>
                     </li>
-                    <img src="/img/PortForward.png" alt="Configuration du Port Forwarding">
+                    <img src="img/PortForward.png" alt="Configuration du Port Forwarding">
                 </ul>
                 <p>
                     Ces règles permettent aux utilisateurs externes d’accéder à notre serveur web tout en le sécurisant contre les flux non autorisés autres que HTTP.
@@ -143,7 +143,7 @@
                             <li><strong>Automatisation</strong> : Ce script est configuré pour s'exécuter automatiquement tous les jours à 2h du matin afin d'assurer des sauvegardes continues.</li>
                         </ul>
                     </li>
-                    <img src="/img/Save.png" alt="Script de sauvegarde">
+                    <img src="img/Save.png" alt="Script de sauvegarde">
                     <li>
                         <strong>Script de restauration</strong> :
                         <ul>
@@ -155,7 +155,7 @@
                                     <li>Le dossier de restauration contiendra la configuration Nginx et les fichiers HTML et CSS de la dernière sauvegarde effectuée.</li>
                                 </ul>
                             </li>
-                            <img src="/img/Restau.png" alt="Script de restauration">
+                            <img src="img/Restau.png" alt="Script de restauration">
                         </ul>
                     </li>
                 </ul>
